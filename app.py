@@ -1,25 +1,40 @@
 import gradio as gr
-from huggingface_hub import InferenceClient
+# from huggingface_hub import InferenceClient
 from model import *
 """
 For more information on `huggingface_hub` Inference API support, please check the docs: https://huggingface.co/docs/huggingface_hub/v0.22.2/en/guides/inference
 """
-client = InferenceClient("HuggingFaceH4/zephyr-7b-beta")
+# client = InferenceClient("HuggingFaceH4/zephyr-7b-beta")
+from transformers import AutoModelForCausalLM, AutoTokenizer, AutoConfig, set_seed
+# from accelerate import infer_auto_device_map as iadm
+
+import torch
+from transformers import AutoTokenizer, AutoModelForCausalLM, GenerationConfig
+
+model_name = "deepseek-ai/deepseek-math-7b-instruct"
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype=torch.bfloat16, device_map="auto")
+model.generation_config = GenerationConfig.from_pretrained(model_name)
+model.generation_config.pad_token_id = model.generation_config.eos_token_id
+
+
+
 
 def evaluate_response(problem):
 #     problem=b'what is angle x if angle y is 60 degree and angle z in 60 degree of a traingle'
-    problem=problem.decode('utf-8')
-    results, answers = [[],[]]
-    messages = [{"role": "user", "content": problem  }] 
-    query_prompt = tokenizer.apply_chat_template(messages, tokenize=False)
-    raw_output = pipeline(query_prompt, max_new_tokens=2048, do_sample=True, temperature=0.9, return_full_text=False)
+    problem=problem+'\nPlease reason step by step, and put your final answer within \\boxed{}.'
+    messages = [
+        {"role": "user", "content": problem}
+    ]
+    input_tensor = tokenizer.apply_chat_template(messages, add_generation_prompt=True, return_tensors="pt")
+    outputs = model.generate(input_tensor.to(model.device), max_new_tokens=100)
 
-    raw_output = raw_output[0]['generated_text']
+    result = tokenizer.decode(outputs[0][input_tensor.shape[1]:], skip_special_tokens=True)
 #     result_output, code_output = process_output(raw_output)
-    return raw_output
+    return result
     
 def respond(
-    message,
+    evaluate_response,
     history: list[tuple[str, str]],
     system_message,
     max_tokens,
