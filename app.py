@@ -61,7 +61,7 @@ model = AutoModelForCausalLM.from_pretrained(
             quantization_config=quantization_config,
             config=config
         )
- pipeline = transformers.pipeline(
+pipeline = transformers.pipeline(
     "text-generation",
     model=model,
     tokenizer=tokenizer,
