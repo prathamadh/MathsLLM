@@ -13,12 +13,7 @@ from transformers import AutoTokenizer, AutoModelForCausalLM, GenerationConfig
 from transformers import BitsAndBytesConfig
 from tqdm import tqdm
 import os 
-quantization_config = BitsAndBytesConfig(
-        load_in_4bit = True,
-        bnb_4bit_quant_type="nf4",
-        bnb_4bit_compute_dtype=torch.bfloat16,
-        bnb_4bit_use_double_quant=True,
-    )
+
 
 USE_PAST_KEY = True
 import gc
@@ -40,40 +35,35 @@ MODEL_PATH = "Pra-tham/quant_deepseekmath"
     
 # DEEP = True
 import torch
-from transformers import BitsAndBytesConfig
-from transformers import AutoModelForCausalLM, AutoTokenizer, AutoConfig
 
-config = AutoConfig.from_pretrained(MODEL_PATH)
-config.gradient_checkpointing = True
+from transformers import AutoModelForCausalLM, AutoTokenizer, AutoConfig
+import transformers
+
+
 
 tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH)
-quantization_config = BitsAndBytesConfig(
-            load_in_4bit = True,
-            bnb_4bit_quant_type="nf4",
-            bnb_4bit_compute_dtype=torch.bfloat16,
-            bnb_4bit_use_double_quant=True,
-        )
+
 model = AutoModelForCausalLM.from_pretrained(
             MODEL_PATH,
-            device_map="sequential",
+            device_map="cpu",
             torch_dtype="auto",
             trust_remote_code=True, 
-            quantization_config=quantization_config,
-            config=config
+
         )
 pipeline = transformers.pipeline(
     "text-generation",
     model=model,
     tokenizer=tokenizer,
     torch_dtype='auto',
-    device_map=device_map,
+    device_map='cpu',
 )
 from transformers import StoppingCriteriaList
 
 class StoppingCriteriaSub(StoppingCriteria):
         def __init__(self, stops = [], encounters=1):
             super().__init__()
-            self.stops = [stop.to("cuda") for stop in stops]
+            # self.stops = [stop.to("cuda") for stop in stops]
+            self.stops = stops
 
         def __call__(self, input_ids: torch.LongTensor, scores: torch.FloatTensor):
             for stop in self.stops:
