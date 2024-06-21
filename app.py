@@ -35,7 +35,7 @@ from transformers import (
 n_repetitions = 1 
 TOTAL_TOKENS = 2048 
 
-MODEL_PATH = "/kaggle/input/deepseek-math"
+MODEL_PATH = "Pra-tham/quant_deepseekmath"
     #"/kaggle/input/gemma/transformers/7b-it/1"
     
 # DEEP = True
