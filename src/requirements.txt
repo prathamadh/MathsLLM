@@ -1,0 +1,6 @@
+
+gradio
+ctranslate2
+transformers
+torch
+numpy
